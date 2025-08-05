@@ -1,4 +1,5 @@
 .answerContainer {
+    width: fit-content;
     padding: 1.25em;
     background: rgb(249, 249, 249);
     border-radius: 0.5em;
@@ -13,18 +14,26 @@
 }
 
 .answerText {
-    font-size: 1rem;
+    font-size: 16px;
     font-weight: 400;
     line-height: 1.375em;
     padding-top: 1em;
     padding-bottom: 1em;
 }
 
+.answerText a {
+    color: #0000f7e5;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
 .answerText h1,
 h2,
 h2 {
-    font-size: 1rem;
+    text-align: center;
+    font-size: 1.625rem;
     font-weight: bold;
+    width: 75%;
 }
 
 .answerText table {
@@ -38,7 +47,7 @@ h2 {
 }
 
 .selected {
-    outline: 0.125em solid rgba(115, 118, 225, 1);
+    outline: 0.125em solid #b1b076;
 }
 
 .citationLearnMore {
@@ -117,6 +126,8 @@ sup {
 
 .retryButton {
     width: fit-content;
+    background-color: var(--army);
+    border-color: var(--army);
 }
 
 @keyframes loading {

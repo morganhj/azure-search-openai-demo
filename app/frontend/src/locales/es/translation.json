@@ -1,17 +1,18 @@
 {
-    "pageTitle": "Azure OpenAI + AI Search",
-    "headerTitle": "Azure OpenAI + AI Search",
+    "pageTitle": "Soldado Digital",
+    "headerTitle": "Soldado Digital",
     "chat": "Chat",
-    "qa": "Haz una pregunta",
+    "qa": "Hacé una pregunta",
     "login": "Iniciar sesión",
     "logout": "Cerrar sesión",
     "clearChat": "Borrar chat",
+    "openPdf": "Abrir PDF",
     "history": {
         "chatHistory": "Historial de chat",
         "openChatHistory": "Abrir historial de chat",
         "noHistory": "No hay historial de chat",
         "deleteModalTitle": "Eliminar historial de chat",
-        "deleteModalDescription": "Esta acción no se puede deshacer. ¿Eliminar este historial de chat?",
+        "deleteModalDescription": "Esta acción no se puede deshacer. ¿Querés eliminar este historial de chat?",
         "deleteLabel": "Eliminar",
         "cancelLabel": "Cancelar",
         "today": "Hoy",
@@ -21,68 +22,68 @@
     },
     "upload": {
         "fileLabel": "Subir archivo:",
-        "uploadedFilesLabel": "Archivos subidos previamente:",
-        "noFilesUploaded": "No se han subido archivos todavía",
+        "uploadedFilesLabel": "Archivos subidos anteriormente:",
+        "noFilesUploaded": "Todavía no subiste archivos",
         "loading": "Cargando...",
-        "manageFileUploads": "Administrar subidas de archivos",
+        "manageFileUploads": "Administrar archivos subidos",
         "uploadingFiles": "Subiendo archivos...",
-        "uploadedFileError": "Error al subir el archivo - por favor, inténtalo de nuevo o contacta con el administrador.",
+        "uploadedFileError": "Hubo un error al subir el archivo. Por favor, intentá de nuevo o contactá al administrador.",
         "deleteFile": "Eliminar archivo",
         "deletingFile": "Eliminando archivo...",
-        "errorDeleting": "Error eliminando.",
+        "errorDeleting": "Error al eliminar.",
         "fileDeleted": "Archivo eliminado"
     },
-    "developerSettings": "Configuración del desarrollador",
+    "developerSettings": "Configuración de desarrollador",
 
-    "chatEmptyStateTitle": "Chatea con tus datos",
-    "chatEmptyStateSubtitle": "Pregunta cualquier cosa o prueba un ejemplo",
+    "chatEmptyStateTitle": "¿En qué te ayudo hoy?",
+    "chatEmptyStateSubtitle": "Utilizo los reglamentos del Núcleo de Instrucción Básico (NIB) para contestar, por lo que formular preguntas precisas te ayudará a obtener mejores respuestas.",
     "defaultExamples": {
-        "1": "¿Qué está incluido en mi plan Northwind Health Plus que no está en el estándar?",
-        "2": "¿Qué sucede en una revisión de rendimiento?",
-        "3": "¿Qué hace un Gerente de producto?",
-        "placeholder": "Escribe una nueva pregunta (por ejemplo, ¿mi plan cubre exámenes anuales de la vista?)"
+        "1": "¿Cómo puedo distinguir una serpiente venenosa de una no venenosa?",
+        "2": "¿Cuáles son los pasos a seguir en caso de mordedura de serpiente?",
+        "3": "¿El Manual del Combatiente Individual tiene capítulos sobre primeros auxilios?",
+        "placeholder": "Escribí una pregunta precisa"
     },
-    "askTitle": "Pregunta a tus datos",
+    "askTitle": "Consulta de Reglamentos",
     "gpt4vExamples": {
-        "1": "Compara el impacto de las tasas de interés y el PIB en los mercados financieros.",
-        "2": "¿Cuál es la tendencia esperada para el índice S&P 500 en los próximos cinco años? Compáralo con el rendimiento pasado del S&P 500",
-        "3": "¿Puedes identificar alguna correlación entre los precios del petróleo y las tendencias del mercado de valores?",
-        "placeholder": "Ejemplo: ¿Mi plan cubre exámenes anuales de la vista?"
+        "1": "Descripción de la libreta de Tiro",
+        "2": "Definición de MAPE",
+        "3": "Posición del Tirador",
+        "placeholder": "¿Qué concepto busco en los reglamentos?"
     },
     "generatingAnswer": "Generando respuesta",
-    "citationWithColon": "Cita:",
-    "followupQuestions": "Preguntas de seguimiento:",
+    "citationWithColon": "Fuente:",
+    "followupQuestions": "Preguntas relacionadas:",
 
     "tooltips": {
         "submitQuestion": "Enviar pregunta",
-        "askWithVoice": "Realizar pregunta con voz",
-        "stopRecording": "Detener la grabación de la pregunta",
-        "showThoughtProcess": "Mostrar proceso de pensamiento",
-        "showSupportingContent": "Mostrar contenido de soporte",
-        "speakAnswer": "Hablar respuesta",
+        "askWithVoice": "Hacer pregunta con voz",
+        "stopRecording": "Detener grabación",
+        "showThoughtProcess": "Mostrar proceso de razonamiento",
+        "showSupportingContent": "Mostrar contenido de referencia",
+        "speakAnswer": "Leer respuesta en voz alta",
         "info": "Información",
         "save": "Guardar",
         "copy": "Copiar",
         "copied": "¡Copiado!"
     },
-
+    "instructions": "Instrucciones",
     "headerTexts":{
-        "thoughtProcess": "Proceso de Pensamiento",
-        "supportingContent": "Contenido de apoyo",
-        "citation": "Cita"
+        "thoughtProcess": "Proceso de razonamiento",
+        "supportingContent": "Contenido de referencia",
+        "citation": "Fuente"
     },
 
     "labels": {
         "toggleMenu": "Alternar menú",
-        "languagePicker": "Seleccione su idioma",
+        "languagePicker": "Seleccioná tu idioma",
         "headerText": "Configurar la generación de respuestas",
         "closeButton": "Cerrar",
         "promptTemplate": "Sobrescribir plantilla de aviso",
         "temperature": "Temperatura",
-        "seed": "Seed",
+        "seed": "Semilla",
         "minimumSearchScore": "Puntaje mínimo de búsqueda",
         "minimumRerankerScore": "Puntaje mínimo de re-clasificación",
-        "retrieveCount": "Obtén éste número de resultados de la búsqueda:",
+        "retrieveCount": "Obtené esta cantidad de resultados en la búsqueda:",
         "includeCategory": "Incluir categoría",
         "includeCategoryOptions": {
             "all": "Todas"
@@ -90,15 +91,7 @@
         "excludeCategory": "Excluir categoría",
         "useSemanticRanker": "Usar clasificador semántico para la recuperación",
         "useSemanticCaptions": "Usar subtítulos semánticos",
-        "useQueryRewriting": "Utiliza la reescritura de consultas para la recuperación",
-        "reasoningEffort": "Esfuerzo de razonamiento",
-        "reasoningEffortOptions": {
-            "low": "Bajo",
-            "medium": "Medio",
-            "high": "Alto"
-        },
-        "useSuggestFollowupQuestions": "Sugerir preguntas de seguimiento",
-        "useAgenticRetrieval": "Usar la recuperación agéntica",
+        "useSuggestFollowupQuestions": "Sugerir preguntas relacionadas",
         "useGPT4V": "Usar modelo de visión GPT",
         "gpt4VInput": {
             "label": "Entradas del modelo de visión GPT",
@@ -109,7 +102,7 @@
             }
         },
         "retrievalMode": {
-            "label": "Modo de recuperación",
+            "label": "Modo de búsqueda",
             "options": {
                 "hybrid": "Vectores + Texto (Híbrido)",
                 "vectors": "Vectores",
@@ -124,47 +117,42 @@
                 "both": "Incrustaciones de texto e imagen"
             }
         },
-        "useOidSecurityFilter": "Usar filtro de seguridad oid",
-        "useGroupsSecurityFilter": "Usar filtro de seguridad degrupos",
-        "shouldStream": "Transmitir respuestas de finalización de chat en tiempo real"
+        "useOidSecurityFilter": "Usar filtro de seguridad OID",
+        "useGroupsSecurityFilter": "Usar filtro de seguridad por grupos",
+        "shouldStream": "Transmitir respuestas en tiempo real"
     },
 
     "helpTexts": {
         "promptTemplate":
-            "Sobrescribe el aviso utilizado para generar la respuesta basada en la pregunta y los resultados de la búsqueda. Para agregar al aviso existente en lugar de reemplazar todo el aviso, comienza tu aviso con '>>>'.",
+            "Sobrescribí el aviso usado para generar la respuesta en base a la pregunta y los resultados de búsqueda. Para agregar al aviso existente en lugar de reemplazarlo, comenzá tu aviso con '>>>'.",
         "temperature":
-            "Establece la temperatura de la solicitud al LLM que genera la respuesta. Temperaturas más altas dan como resultado respuestas más creativas, pero pueden ser menos realistas.",
+            "Ajustá la temperatura de la solicitud al LLM. Temperaturas más altas generan respuestas más creativas, pero pueden ser menos precisas.",
         "seed":
-            "Define un número entero para mejorar la reproducibilidad de las respuestas del modelo. El número de semilla se utiliza para generar respuestas más consistentes. El número de semilla puede ser cualquier número.",
+            "Definí un número entero para mejorar la reproducibilidad de las respuestas del modelo. Puede ser cualquier número.",
         "searchScore":
-            "Establece una puntuación mínima para los resultados de búsqueda que vuelven de Azure AI search. El rango de puntuaciones depende de si estás utilizando híbrido (predeterminado), solo vectores o solo texto.",
+            "Establecé un puntaje mínimo para los resultados de búsqueda en Azure AI Search. El rango varía según el modo de búsqueda usado.",
         "rerankerScore":
-            "Establece una puntuación mínima para los resultados de búsqueda que vuelven del re-clasificador semántico. La puntuación siempre varía entre 0-4. Cuanto mayor es la puntuación, más relevante es semánticamente el resultado a la pregunta.",
+            "Definí un puntaje mínimo para los resultados del re-clasificador semántico (entre 0-4). Cuanto más alto, más relevante el resultado.",
         "retrieveNumber":
-            "Establece el número de resultados de búsqueda para recuperar de Azure AI search. Más resultados pueden aumentar la probabilidad de encontrar la respuesta correcta, pero pueden provocar que el modelo se 'pierda en el medio'.",
+            "Configurá cuántos resultados recuperar de Azure AI Search. Más resultados pueden mejorar la respuesta, pero pueden hacer que el modelo se confunda.",
         "includeCategory":
-            "Especifica una categoría para incluir en los resultados de la búsqueda. No se utilizan categorías en el conjunto de datos predeterminado.",
+            "Especificá una categoría para incluir en los resultados de búsqueda. No se usan categorías por defecto.",
         "excludeCategory":
-            "Especifica una categoría para excluir de los resultados de búsqueda. No se utilizan categorías en el conjunto de datos predeterminado.",
+            "Especificá una categoría para excluir en la búsqueda. No se usan categorías por defecto.",
         "useSemanticReranker":
-            "Habilita el re-clasificador semántico de Azure AI Search, un modelo que re-clasifica los resultados de búsqueda basándose en la similitud semántica con la consulta del usuario.",
+            "Activa el re-clasificador semántico de Azure AI Search, que ordena los resultados en base a su similitud con la pregunta del usuario.",
         "useSemanticCaptions":
-            "Envía subtítulos semánticos al LLM en lugar del resultado de búsqueda completo. Un subtítulo semántico se extrae de un resultado de búsqueda durante el proceso de clasificación semántica.",
-        "useQueryRewriting":
-            "Habilita la reescritura de consultas de Azure AI Search, un proceso que modifica la consulta del usuario para mejorar los resultados de búsqueda. Requiere que el clasificador semántico esté habilitado.",
-        "reasoningEffort":
-            "Establece el esfuerzo de razonamiento para el LLM. Los valores más altos resultan en más razonamiento, pero pueden tardar más en generar una respuesta. El valor predeterminado es medio.",
-        "suggestFollowupQuestions": "Pide al LLM que sugiera preguntas de seguimiento basándose en la consulta del usuario.",
-        "useGPT4Vision": "Utiliza GPT-4-Turbo con Visión para generar respuestas basándose en imágenes y texto del índice.",
+            "Envía subtítulos semánticos al LLM en lugar de los resultados completos. Los subtítulos resaltan información clave.",
+        "suggestFollowupQuestions": "Pedile al LLM que sugiera preguntas relacionadas a la consulta del usuario.",
+        "useGPT4Vision": "Usa GPT-4-Turbo con Visión para interpretar imágenes y texto.",
         "vectorFields":
-            "Especifica qué campos de incrustación en el índice de búsqueda de Azure AI se buscarán, tanto las incrustaciones de 'Imágenes y texto', solo 'Imagenes', o solo 'Texto'.",
+            "Seleccioná qué tipo de datos se usarán en la búsqueda de Azure AI: 'Texto e imágenes', solo 'Imágenes' o solo 'Texto'.",
         "gpt4VisionInputs":
-            "Establece lo que se enviará al modelo de visión. 'Imágenes y texto' envía tanto imágenes como texto al modelo, 'Imágenes' solo envía imágenes y 'Texto' solo envía texto.",
+            "Definí qué se enviará al modelo de visión. 'Imágenes y texto' usa ambos, 'Imágenes' solo imágenes, y 'Texto' solo texto.",
         "retrievalMode":
-            "Establece el modo de recuperación para la consulta de búsqueda de Azure AI. Vectores + Texto (Híbrido) utiliza una combinación de búsqueda vectorial y búsqueda de texto completo, Vectores utiliza solo la búsqueda vectorial y Texto utiliza solo la búsqueda de texto completo. Generalmente, el modo híbrido es óptimo.",
-        "streamChat": "Transmite continuamente la respuesta a la interfaz de usuario del chat mientras se genera.",
-        "useOidSecurityFilter": "Filtra los resultados de búsqueda en función del OID del usuario autenticado.",
-        "useGroupsSecurityFilter": "Filtra los resultados de búsqueda en función de los grupos del usuario autenticado.",
-        "useAgenticRetrieval": "Use agentic retrieval from Azure AI Search for multi-query planning. Always uses semantic ranker."
+            "Definí el modo de búsqueda: Híbrido (vectores + texto), solo Vectores o solo Texto. Generalmente, el modo híbrido es el mejor.",
+        "streamChat": "Transmite la respuesta a medida que se genera.",
+        "useOidSecurityFilter": "Filtra resultados según el OID del usuario autenticado.",
+        "useGroupsSecurityFilter": "Filtra resultados según los grupos del usuario autenticado."
     }
 }

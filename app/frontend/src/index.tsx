@@ -6,10 +6,16 @@ import { HelmetProvider } from "react-helmet-async";
 import { initializeIcons } from "@fluentui/react";
 
 import "./index.css";
+import "./styles/styles.css";
 
 import Chat from "./pages/chat/Chat";
 import LayoutWrapper from "./layoutWrapper";
 import i18next from "./i18n/config";
+import { AuthenticationGuard } from "./components/authentication-guard";
+import { PageLayout } from "./components/page-layout";
+import { PublicPage } from "./pages/public-page";
+
+import MercadoPagoCallback from "./pages/mercadopago-callback";
 
 initializeIcons();
 
@@ -20,11 +26,19 @@ const router = createHashRouter([
         children: [
             {
                 index: true,
-                element: <Chat />
+                element: <PublicPage />
             },
             {
-                path: "qa",
-                lazy: () => import("./pages/ask/Ask")
+                path: "callback",
+                element: <AuthenticationGuard component={Chat} />
+            },
+            {
+                path: "chat",
+                element: <AuthenticationGuard component={Chat} />
+            },
+            {
+                path: "mercadopago/callback",
+                element: <AuthenticationGuard component={MercadoPagoCallback} />
             },
             {
                 path: "*",

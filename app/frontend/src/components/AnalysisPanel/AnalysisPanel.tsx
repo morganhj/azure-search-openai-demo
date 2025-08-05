@@ -11,6 +11,9 @@ import { useMsal } from "@azure/msal-react";
 import { getHeaders } from "../../api";
 import { useLogin, getToken } from "../../authConfig";
 import { useState, useEffect } from "react";
+import { DocumentPdfRegular } from "@fluentui/react-icons";
+import { CompoundButton } from "@fluentui/react-components";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface Props {
     className: string;
@@ -24,6 +27,7 @@ interface Props {
 const pivotItemDisabledStyle = { disabled: true, style: { color: "grey" } };
 
 export const AnalysisPanel = ({ answer, activeTab, activeCitation, citationHeight, className, onActiveTabChanged }: Props) => {
+    const { user } = useAuth0();
     const isDisabledThoughtProcessTab: boolean = !answer.context.thoughts;
     const isDisabledSupportingContentTab: boolean = !answer.context.data_points;
     const isDisabledCitationTab: boolean = !activeCitation;
@@ -38,11 +42,17 @@ export const AnalysisPanel = ({ answer, activeTab, activeCitation, citationHeigh
             // Get hash from the URL as it may contain #page=N
             // which helps browser PDF renderer jump to correct page N
             const originalHash = activeCitation.indexOf("#") ? activeCitation.split("#")[1] : "";
+            const headers = await getHeaders(token);
             const response = await fetch(activeCitation, {
                 method: "GET",
-                headers: await getHeaders(token)
+                headers: {
+                    ...headers,
+                    "x-user-id": user?.sub || "",
+                    Authorization: `Bearer ${import.meta.env.VITE_SOLDIG_TOKEN}`
+                }
             });
             const citationContent = await response.blob();
+
             let citationObjectUrl = URL.createObjectURL(citationContent);
             // Add hash back to the new blob URL
             if (originalHash) {
@@ -67,8 +77,31 @@ export const AnalysisPanel = ({ answer, activeTab, activeCitation, citationHeigh
             case "md":
                 return <MarkdownViewer src={activeCitation} />;
             default:
-                return <iframe title="Citation" src={citation} width="100%" height={citationHeight} />;
+                return iFrame();
         }
+    };
+
+    const getFileName = (path: string): string => {
+        return path.replace(/^\/content\//, "").split("#")[0];
+    };
+
+    const iFrame = () => {
+        if (/Mobi|Android/i.test(navigator.userAgent)) {
+            return (
+                <CompoundButton
+                    as="a"
+                    style={{ marginTop: "10px" }}
+                    href={citation}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    icon={<DocumentPdfRegular />}
+                    secondaryContent={activeCitation ? getFileName(activeCitation) : ""}
+                >
+                    {t("openPdf")}
+                </CompoundButton>
+            );
+        }
+        return <iframe title="Citation" src={citation} width="100%" height={citationHeight} />;
     };
 
     return (
@@ -77,13 +110,13 @@ export const AnalysisPanel = ({ answer, activeTab, activeCitation, citationHeigh
             selectedKey={activeTab}
             onLinkClick={pivotItem => pivotItem && onActiveTabChanged(pivotItem.props.itemKey! as AnalysisPanelTabs)}
         >
-            <PivotItem
+            {/* <PivotItem
                 itemKey={AnalysisPanelTabs.ThoughtProcessTab}
                 headerText={t("headerTexts.thoughtProcess")}
                 headerButtonProps={isDisabledThoughtProcessTab ? pivotItemDisabledStyle : undefined}
             >
                 <ThoughtProcess thoughts={answer.context.thoughts || []} />
-            </PivotItem>
+            </PivotItem> */}
             <PivotItem
                 itemKey={AnalysisPanelTabs.SupportingContentTab}
                 headerText={t("headerTexts.supportingContent")}

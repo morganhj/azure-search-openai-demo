@@ -5,6 +5,7 @@ import logging
 import mimetypes
 import os
 import time
+import datetime
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any, Union, cast
@@ -49,6 +50,9 @@ from quart import (
     send_from_directory,
 )
 from quart_cors import cors
+from auth0_utils import get_auth0_user, get_auth0_mgmt_token, update_auth0_user_app_metadata, assign_subscriber_role_to_user
+
+from mercadopago_utils import get_mercadopago_preapproval_status
 
 from approaches.approach import Approach
 from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
@@ -255,6 +259,44 @@ async def chat_stream(auth_claims: dict[str, Any]):
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
+    if not auth_claims.get("subscriber"):
+        user_id = auth_claims.get("user_id")
+        mgmt_token = auth_claims.pop('mgmt_token', None)
+        if not mgmt_token:
+            mgmt_token, error_json, error_code = await get_auth0_mgmt_token()
+            if error_json:
+                return error_response(error_json, "/chat/stream")
+        user_info, error, status = await get_auth0_user(user_id, mgmt_token)
+        if error:
+            return error_response(error, "/chat/stream")
+        app_metadata = user_info.get("app_metadata", {})
+        blocked_until = app_metadata.get("blocked_until")
+        if blocked_until:
+            # Convert string to datetime for comparison
+            try:
+                blocked_until_dt = datetime.datetime.fromisoformat(blocked_until)
+            except Exception:
+                blocked_until_dt = None
+            if blocked_until_dt and datetime.datetime.now(datetime.timezone.utc) < blocked_until_dt:
+                now = datetime.datetime.now(datetime.timezone.utc)
+                delta = blocked_until_dt - now
+                hours = int(delta.total_seconds() // 3600)
+                if hours > 0:
+                    time_str = f"{hours}hs"
+                else:
+                    time_str = "menos de 1 hora"
+                return jsonify({
+                    "error": f"Has alcanzado el límite de 3 solicitudes. Por favor, inténtalo de nuevo en {time_str} ó [SUSCRIBITE](https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=2c93808494dc05c90194e6b7ccef0588) para disfrutar de solicitudes ilimitadas"
+                }), 429
+        count = app_metadata.get("count", 0)
+        if count < 2:
+            app_metadata["count"] = count + 1
+        else:
+            blocked_until_dt = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=2)
+            # Convert to ISO string for JSON serialization
+            app_metadata["blocked_until"] = blocked_until_dt.isoformat()
+            app_metadata["count"] = 0
+        await update_auth0_user_app_metadata(user_id, mgmt_token, app_metadata)
     context = request_json.get("context", {})
     context["auth_claims"] = auth_claims
     try:
@@ -285,6 +327,43 @@ async def chat_stream(auth_claims: dict[str, Any]):
     except Exception as error:
         return error_response(error, "/chat")
 
+# Endpoint to confirm Mercado Pago subscription and update Auth0 user roles
+@bp.route("/mercadopago/confirm-subscription", methods=["POST"])
+async def mercadopago_confirm_subscription():
+    data = await request.get_json()
+    preapproval_id = data.get("preapproval_id")
+    user_id = data.get("user_id")
+    if not preapproval_id or not user_id:
+        return jsonify({"error": "Missing preapproval_id or user_id"}), 400
+
+    # Check preapproval status
+    preapproval, err, code = await get_mercadopago_preapproval_status(preapproval_id)
+    if err:
+        return jsonify(err), code
+    if preapproval.get("status") != "authorized":
+        return jsonify({"error": "La suscripción no está activa. Estado: " + preapproval.get("status", "desconocido")}), 400
+
+    # Get Auth0 management token
+    mgmt_token, err, code = await get_auth0_mgmt_token()
+    if err:
+        return jsonify(err), code
+
+    # Assign Auth0 subscriber role using Management API
+    result, err, code = await assign_subscriber_role_to_user(user_id, mgmt_token)
+    if err:
+        return jsonify(err), code
+
+    # Store preapproval_id as app_metadata.active_subscription (string)
+    user_info, err, code = await get_auth0_user(user_id, mgmt_token)
+    if err:
+        return jsonify(err), code
+    app_metadata = user_info.get("app_metadata", {})
+    app_metadata["active_subscription"] = preapproval_id
+    updated, err, code = await update_auth0_user_app_metadata(user_id, mgmt_token, app_metadata)
+    if err:
+        return jsonify(err), code
+
+    return jsonify({"success": True, "message": "Suscripción confirmada, rol asignado y suscripción guardada."})
 
 # Send MSAL.js settings to the client UI
 @bp.route("/auth_setup", methods=["GET"])
@@ -554,6 +633,10 @@ async def setup_clients():
         require_access_control=AZURE_ENFORCE_ACCESS_CONTROL,
         enable_global_documents=AZURE_ENABLE_GLOBAL_DOCUMENT_ACCESS,
         enable_unauthenticated_access=AZURE_ENABLE_UNAUTHENTICATED_ACCESS,
+        auth_url=os.getenv("CCDM_VERIFY_SUB_URL"),
+        api_key=os.getenv("SOLDIG_TOKEN"),
+        auth_service_token=os.getenv("CCDM_API_V1_TOKEN"),
+        jwt_secret=os.getenv("JWT_SECRET"),
     )
 
     if USE_USER_UPLOAD:

@@ -1,10 +1,10 @@
 import { useRef, useState, useEffect, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
-import { Panel, DefaultButton } from "@fluentui/react";
+import { Panel, PanelType, DefaultButton } from "@fluentui/react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import appLogo from "../../assets/applogo.svg";
+import appLogo from "../../assets/app_logo.jpeg";
 import styles from "./Chat.module.css";
 
 import {
@@ -17,7 +17,9 @@ import {
     ResponseMessage,
     VectorFields,
     GPT4VInput,
-    SpeechConfig
+    SpeechConfig,
+    CustomChatURLParams,
+    fetchUserInfo
 } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -36,8 +38,11 @@ import { TokenClaimsDisplay } from "../../components/TokenClaimsDisplay";
 import { LoginContext } from "../../loginContext";
 import { LanguagePicker } from "../../i18n/LanguagePicker";
 import { Settings } from "../../components/Settings/Settings";
+import { InstructionsButton } from "../../components/InstructionsButton";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const Chat = () => {
+    const { user } = useAuth0();
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
     const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
     const [promptTemplate, setPromptTemplate] = useState<string>("");
@@ -63,6 +68,10 @@ const Chat = () => {
     const [useGroupsSecurityFilter, setUseGroupsSecurityFilter] = useState<boolean>(false);
     const [gpt4vInput, setGPT4VInput] = useState<GPT4VInput>(GPT4VInput.TextAndImages);
     const [useGPT4V, setUseGPT4V] = useState<boolean>(false);
+
+    const [isPanelOpen, setIsPanelOpen] = useState(false);
+    const openPanel = () => setIsPanelOpen(true);
+    const closePanel = () => setIsPanelOpen(false);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -198,6 +207,9 @@ const Chat = () => {
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
 
+        // // Retrieve authentication headers
+        const soldigToken = import.meta.env.VITE_SOLDIG_TOKEN;
+
         error && setError(undefined);
         setIsLoading(true);
         setActiveCitation(undefined);
@@ -244,11 +256,22 @@ const Chat = () => {
                 session_state: answers.length ? answers[answers.length - 1][1].session_state : null
             };
 
-            const response = await chatApi(request, shouldStream, token);
+            const headers: CustomChatURLParams = {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${soldigToken}`,
+                "x-user-id": user?.sub
+            };
+
+            const response = await chatApi(request, shouldStream, token, headers);
             if (!response.body) {
                 throw Error("No response body");
             }
-            if (response.status > 299 || !response.ok) {
+            // if (response.status == 429) {
+            //     // throw Error(
+            //     //     `No sos suscriptor de Soldado Digital todavía. Visitá {{https://copiascampodemayo.com/suscripcion-a-soldado-digital/}} para suscribirte`
+            //     // );
+            // }
+            if ((response.status > 299 || !response.ok) && response.status !== 429) {
                 throw Error(`Request failed with status ${response.status}`);
             }
             if (shouldStream) {
@@ -271,7 +294,15 @@ const Chat = () => {
             }
             setSpeechUrls([...speechUrls, null]);
         } catch (e) {
-            setError(e);
+            let errorMsg = "Unknown error";
+            if (typeof e === "string") {
+                errorMsg = e;
+            } else if (e instanceof Error) {
+                errorMsg = e.message;
+            } else if (typeof e === "object" && e && "message" in e && typeof (e as any).message === "string") {
+                errorMsg = (e as any).message;
+            }
+            setError(errorMsg);
         } finally {
             setIsLoading(false);
         }
@@ -409,8 +440,9 @@ const Chat = () => {
                 </div>
                 <div className={styles.commandsContainer}>
                     <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+                    <InstructionsButton className={styles.commandButton} onClick={openPanel} disabled={isLoading} />
                     {showUserUpload && <UploadFile className={styles.commandButton} disabled={!loggedIn} />}
-                    <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />
+                    {/* <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} /> */}
                 </div>
             </div>
             <div className={styles.chatRoot} style={{ marginLeft: isHistoryPanelOpen ? "300px" : "0" }}>
@@ -504,17 +536,6 @@ const Chat = () => {
                     </div>
                 </div>
 
-                {answers.length > 0 && activeAnalysisPanelTab && (
-                    <AnalysisPanel
-                        className={styles.chatAnalysisPanel}
-                        activeCitation={activeCitation}
-                        onActiveTabChanged={x => onToggleTab(x, selectedAnswer)}
-                        citationHeight="810px"
-                        answer={answers[selectedAnswer][1]}
-                        activeTab={activeAnalysisPanelTab}
-                    />
-                )}
-
                 {((useLogin && showChatHistoryCosmos) || showChatHistoryBrowser) && (
                     <HistoryPanel
                         provider={historyProvider}
@@ -528,6 +549,29 @@ const Chat = () => {
                         }}
                     />
                 )}
+                <Panel
+                    // headerText={t("labels.headerText")}
+                    isOpen={activeAnalysisPanelTab !== undefined}
+                    isBlocking={false}
+                    allowTouchBodyScroll={true}
+                    onDismiss={() => setActiveAnalysisPanelTab(undefined)}
+                    closeButtonAriaLabel={t("labels.closeButton")}
+                    onRenderFooterContent={() => <DefaultButton onClick={() => setActiveAnalysisPanelTab(undefined)}>{t("labels.closeButton")}</DefaultButton>}
+                    isFooterAtBottom={true}
+                    // modify width of the panel to 100%. the default width is 340px and the component is .ms-Panel-main in fluentui
+                    type={0}
+                >
+                    {answers.length > 0 && activeAnalysisPanelTab && (
+                        <AnalysisPanel
+                            className={styles.chatAnalysisPanel}
+                            activeCitation={activeCitation}
+                            onActiveTabChanged={x => onToggleTab(x, selectedAnswer)}
+                            citationHeight="810px"
+                            answer={answers[selectedAnswer][1]}
+                            activeTab={activeAnalysisPanelTab}
+                        />
+                    )}
+                </Panel>
 
                 <Panel
                     headerText={t("labels.headerText")}
@@ -578,6 +622,43 @@ const Chat = () => {
                     {useLogin && <TokenClaimsDisplay />}
                 </Panel>
             </div>
+            <Panel
+                isOpen={isPanelOpen}
+                onDismiss={closePanel}
+                type={PanelType.medium}
+                headerText="Información importante"
+                styles={{ main: { backgroundColor: "#fff9ec" } }}
+            >
+                <div style={{ paddingTop: "3rem" }}>
+                    <p>
+                        <strong>El Soldado Digital está diseñado para responder según los reglamentos del NIB.</strong> Cuanto más precisa sea tu consulta,
+                        mejores respuestas recibirás.
+                    </p>
+                    <p>
+                        Recordá que el chat se borra periódicamente. Si tenés conversaciones importantes, asegurate de exportar el texto y guardarlo localmente.
+                    </p>
+                    <p>
+                        <strong>Soldado Digital es un producto en desarrollo.</strong> Si querés que se incorporen nuevos documentos a la base de datos, por
+                        favor, enviálos a <a href="mailto:copiascampodemayo@gmail.com">copiascampodemayo@gmail.com</a>.
+                    </p>
+                    <p>
+                        Si necesitás una <strong>alocución</strong> o <strong>trabajo de gabinete</strong>, podés acceder a una versión del Soldado Digital
+                        especialmente entrenado para ello escribiendo al WhatsApp <strong>1544179151</strong>. Este{" "}
+                        <a href="https://api.whatsapp.com/send?phone=5491144179151">link</a> te lleva directamente.
+                    </p>
+                    <p>
+                        Si hacés clic en la <strong>Fuente</strong>, se abrirá el PDF relevante. Este proceso puede tardar hasta un minuto; estamos trabajando
+                        para hacerlo más rápido.
+                    </p>
+                    <p>
+                        <strong>El Soldado Digital tiene más funcionalidades en la computadora que en el celular.</strong>
+                    </p>
+                    <p>
+                        <strong>Tu opinión es importante para nosotros.</strong> Si tenés sugerencias o encontrás errores, por favor, envianos un correo a{" "}
+                        <a href="mailto:copiascampodemayo@gmail.com">copiascampodemayo@gmail.com</a>.
+                    </p>
+                </div>
+            </Panel>
         </div>
     );
 };

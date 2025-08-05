@@ -86,11 +86,17 @@ export type ChatAppRequest = {
     session_state: any;
 };
 
+export type CustomChatURLParams = {
+    "Content-Type": string;
+    Authorization: string | null;
+    "x-user-id": string | undefined;
+};
+
 export type Config = {
-    defaultReasoningEffort: string;
+defaultReasoningEffort: string;
     showGPT4VOptions: boolean;
     showSemanticRankerOption: boolean;
-    showQueryRewritingOption: boolean;
+showQueryRewritingOption: boolean;
     showReasoningEffortOption: boolean;
     streamingEnabled: boolean;
     showVectorOption: boolean;
@@ -101,7 +107,7 @@ export type Config = {
     showSpeechOutputAzure: boolean;
     showChatHistoryBrowser: boolean;
     showChatHistoryCosmos: boolean;
-    showAgenticRetrievalOption: boolean;
+showAgenticRetrievalOption: boolean;
 };
 
 export type SimpleAPIResponse = {

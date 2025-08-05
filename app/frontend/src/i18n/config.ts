@@ -70,6 +70,7 @@ i18next
             tr: { translation: trTranslation },
             it: { translation: itTranslation }
         },
+        lng: "es",
         fallbackLng: "en",
         supportedLngs: Object.keys(supportedLngs),
         debug: import.meta.env.DEV,

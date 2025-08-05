@@ -5,11 +5,13 @@
         0px 0px 0.125rem rgba(0, 0, 0, 0.12);
     width: 100%;
     padding: 0.8rem;
+    height: fit-content;
     background: white;
 }
 
 .questionInputTextArea {
     width: 100%;
+    height: fit-content;
     line-height: 2.5rem;
 }
 
@@ -22,5 +24,6 @@
 @media (min-width: 992px) {
     .questionInputContainer {
         height: 5.625rem;
+        overflow: hidden;
     }
 }

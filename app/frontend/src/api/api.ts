@@ -41,16 +41,30 @@ export async function askApi(request: ChatAppRequest, idToken: string | undefine
     return parsedResponse as ChatAppResponse;
 }
 
-export async function chatApi(request: ChatAppRequest, shouldStream: boolean, idToken: string | undefined): Promise<Response> {
+export async function chatApi(request: ChatAppRequest, shouldStream: boolean, idToken: string | undefined, customHeaders: any): Promise<Response> {
     let url = `${BACKEND_URI}/chat`;
     if (shouldStream) {
         url += "/stream";
     }
-    const headers = await getHeaders(idToken);
+    // const headers = await getHeaders(idToken);
     return await fetch(url, {
         method: "POST",
-        headers: { ...headers, "Content-Type": "application/json" },
+        credentials: "include",
+        headers: { ...customHeaders, "Content-Type": "application/json" },
         body: JSON.stringify(request)
+    });
+}
+
+export async function fetchUserInfo(userId: string | undefined): Promise<Response> {
+    if (!userId) {
+        throw new Error("User ID is required for access control.");
+    }
+    return await fetch(`${BACKEND_URI}/auth0/userinfo`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "x-user-id": userId
+        }
     });
 }
 

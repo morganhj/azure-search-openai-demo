@@ -5,8 +5,8 @@
 }
 
 .header {
-    background-color: #222222;
-    color: #f2f2f2;
+    background-color: #b1b076;
+    color: #000000;
 }
 
 .headerContainer {
@@ -21,13 +21,48 @@
 .headerTitleContainer {
     display: flex;
     align-items: center;
-    color: #f2f2f2;
+    color: #000000;
     text-decoration: none;
 }
 
 .headerLogo {
     height: 2rem;
     width: auto;
+}
+
+.instructionsButton {
+    word-break: break-word;
+    background: #dbdbdb;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.3125rem;
+    cursor: pointer;
+}
+
+.instructionsButton {
+    word-break: break-word;
+    background: #dbdbdb;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.instructionsButton:hover {
+    box-shadow:
+        0rem 0.5rem 1rem rgba(0, 0, 0, 0.14),
+        0rem 0rem 0.125rem rgba(0, 0, 0, 0.12);
+    outline: 0.125rem solid #b1b076;
+}
+
+.instructionsButtonText {
+    margin: 0;
+    font-size: 1.25rem;
+    text-align: center;
+    padding: 0.2rem;
+    padding-right: 1rem;
+    padding-left: 1rem;
 }
 
 .headerTitle {
@@ -39,7 +74,7 @@
     z-index: 100;
     display: none;
     flex-direction: column;
-    background-color: #222222;
+    background-color: #b1b076;
     position: absolute;
     top: 2.7rem;
     right: 0;
@@ -57,7 +92,7 @@
     padding: 1rem;
     border-bottom: 1px solid #333;
     text-align: right;
-    color: #f2f2f2;
+    color: #000000;
     text-decoration: none;
     opacity: 0.75;
     transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -71,7 +106,7 @@
 }
 
 .headerNavPageLinkActive {
-    color: #f2f2f2;
+    color: #000000;
     text-decoration: none;
     font-size: 1.2rem;
     text-align: right;
@@ -86,7 +121,7 @@
     display: block;
     background: none;
     border: none;
-    color: #f2f2f2;
+    color: #000000;
     font-size: 1.5rem;
     cursor: pointer;
     z-index: 101;
@@ -123,7 +158,7 @@
     }
 
     .headerNavPageLinkActive {
-        color: #f2f2f2;
+        color: #000000;
         text-decoration: none;
     }
 

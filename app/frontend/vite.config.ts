@@ -27,8 +27,20 @@ export default defineConfig({
         target: "esnext"
     },
     server: {
+        allowedHosts: ["soldadodigital.com"],
         proxy: {
-            "/content/": "http://localhost:50505",
+            "/content/": {
+                target: "http://localhost:50505",
+                changeOrigin: true,
+                configure: (proxy, options) => {
+                    proxy.on("proxyReq", (proxyReq, req, res) => {
+                        // Forward the Authorization header if present
+                        if (req.headers.authorization) {
+                            proxyReq.setHeader("Authorization", req.headers.authorization);
+                        }
+                    });
+                }
+            },
             "/auth_setup": "http://localhost:50505",
             "/.auth/me": "http://localhost:50505",
             "/ask": "http://localhost:50505",
@@ -38,7 +50,9 @@ export default defineConfig({
             "/upload": "http://localhost:50505",
             "/delete_uploaded": "http://localhost:50505",
             "/list_uploaded": "http://localhost:50505",
-            "/chat_history": "http://localhost:50505"
+            "/chat_history": "http://localhost:50505",
+            "/auth0/userinfo": "http://localhost:50505",
+            "/mercadopago/confirm-subscription": "http://localhost:50505"
         }
     }
 });

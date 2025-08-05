@@ -1,12 +1,15 @@
 # Refactored from https://github.com/Azure-Samples/ms-identity-python-on-behalf-of
 
+import os
 import base64
 import json
 import logging
+import datetime
 from typing import Any, Optional
 
 import aiohttp
 import jwt
+from quart import Response
 from azure.search.documents.aio import SearchClient
 from azure.search.documents.indexes.models import SearchIndex
 from cryptography.hazmat.primitives import serialization
@@ -19,6 +22,7 @@ from tenacity import (
     stop_after_attempt,
     wait_random_exponential,
 )
+from auth0_utils import get_auth0_mgmt_token, get_auth0_user
 
 
 # AuthError is raised when the authentication token sent by the client UI cannot be parsed or there is an authentication error accessing the graph API
@@ -45,6 +49,10 @@ class AuthenticationHelper:
         require_access_control: bool = False,
         enable_global_documents: bool = False,
         enable_unauthenticated_access: bool = False,
+        auth_url: Optional[str] = None,
+        api_key: Optional[str] = None,
+        auth_service_token: Optional[str] = None,
+        jwt_secret: Optional[str] = None,
     ):
         self.use_authentication = use_authentication
         self.server_app_id = server_app_id
@@ -61,6 +69,10 @@ class AuthenticationHelper:
         self.valid_audiences = [f"api://{server_app_id}", str(server_app_id)]
         # See https://learn.microsoft.com/entra/identity-platform/access-tokens#validate-the-issuer for more information on token validation
         self.key_url = f"{self.authority}/discovery/v2.0/keys"
+        self.auth_url = auth_url
+        self.api_key = api_key
+        self.auth_service_token = auth_service_token
+        self.jwt_secret = jwt_secret
 
         if self.use_authentication:
             field_names = [field.name for field in search_index.fields] if search_index else []
@@ -207,53 +219,155 @@ class AuthenticationHelper:
 
         return groups
 
-    async def get_auth_claims_if_enabled(self, headers: dict) -> dict[str, Any]:
-        if not self.use_authentication:
-            return {}
+    # async def get_auth_claims_if_enabled(self, headers: dict) -> dict[str, Any]:
+    #     if not self.use_authentication:
+    #         return {}
+    #     try:
+    #         # Read the authentication token from the authorization header and exchange it using the On Behalf Of Flow
+    #         # The scope is set to the Microsoft Graph API, which may need to be called for more authorization information
+    #         # https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow
+    #         auth_token = AuthenticationHelper.get_token_auth_header(headers)
+    #         # Validate the token before use
+    #         await self.validate_access_token(auth_token)
+
+    #         # Use the on-behalf-of-flow to acquire another token for use with Microsoft Graph
+    #         # See https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow for more information
+    #         graph_resource_access_token = self.confidential_client.acquire_token_on_behalf_of(
+    #             user_assertion=auth_token, scopes=["https://graph.microsoft.com/.default"]
+    #         )
+    #         if "error" in graph_resource_access_token:
+    #             raise AuthError(error=str(graph_resource_access_token), status_code=401)
+
+    #         # Read the claims from the response. The oid and groups claims are used for security filtering
+    #         # https://learn.microsoft.com/entra/identity-platform/id-token-claims-reference
+    #         id_token_claims = graph_resource_access_token["id_token_claims"]
+    #         auth_claims = {"oid": id_token_claims["oid"], "groups": id_token_claims.get("groups", [])}
+
+    #         # A groups claim may have been omitted either because it was not added in the application manifest for the API application,
+    #         # or a groups overage claim may have been emitted.
+    #         # https://learn.microsoft.com/entra/identity-platform/id-token-claims-reference#groups-overage-claim
+    #         missing_groups_claim = "groups" not in id_token_claims
+    #         has_group_overage_claim = (
+    #             missing_groups_claim
+    #             and "_claim_names" in id_token_claims
+    #             and "groups" in id_token_claims["_claim_names"]
+    #         )
+    #         if missing_groups_claim or has_group_overage_claim:
+    #             # Read the user's groups from Microsoft Graph
+    #             auth_claims["groups"] = await AuthenticationHelper.list_groups(graph_resource_access_token)
+    #         return auth_claims
+    #     except AuthError as e:
+    #         logging.exception("Exception getting authorization information - " + json.dumps(e.error))
+    #         if self.require_access_control and not self.enable_unauthenticated_access:
+    #             raise
+    #         return {}
+    #     except Exception:
+    #         logging.exception("Exception getting authorization information")
+    #         if self.require_access_control and not self.enable_unauthenticated_access:
+    #             raise
+    #         return {}
+
+    async def get_auth_claims_if_enabled(self, request):
+        headers = request.headers
+        # Step 1: Get the Bearer token from the Authorization header
+        authorization_header = headers.get("Authorization")
+        print(f"Authorization header: {authorization_header}")
+        if not authorization_header or not authorization_header.startswith("Bearer "):
+            raise AuthError(error="Missing or invalid Authorization header", status_code=401)
+        # Extract the token (the string after "Bearer ")
+        bearer_token = authorization_header.split("Bearer ")[1]
+        # Validate the token against your API_KEY
+        print(f"Bearer token: {bearer_token}; API Key: {self.api_key}")
+        if bearer_token != self.api_key:
+            raise AuthError(error="Invalid token", status_code=401)
+
+        # Step 2: Check if the user already has a valid session (cookie)
+        auth_token = request.cookies.get("auth_token")
+        print(f"Auth token from cookie: {auth_token}")
+        if auth_token:
+            # If we have a valid auth_token, skip the auth request and just return claims
+            user_claims, response = self.get_user_claims_from_token(auth_token)
+            # if user_id in user_claims equals x-user-id in headers, then we can return the user_claims
+            if "user_id" in user_claims and headers.get("x-user-id") == user_claims["user_id"]:
+                return user_claims, response
+        # Step 3: Get the user_id from the headers
+        user_id = headers.get("x-user-id")
+        print(f"User ID from headers: {user_id}")
+        if not user_id:
+            raise AuthError(error="Missing user_id in headers", status_code=401)
+
+        mgmt_token, error_json, error_code = await get_auth0_mgmt_token()
+        print(f"Management token: {mgmt_token}")
+        if error_json:
+            raise AuthError(error="Failed to get Auth0 Management token", status_code=error_code)
+        # Instead of fetching user roles, fetch app_metadata and check Mercado Pago subscription
+        user_info, error_json, error_code = await get_auth0_user(user_id, mgmt_token)
+        print(f"User info: {user_info}")
+        if error_json:
+            raise AuthError(error="Failed to get Auth0 user info", status_code=error_code)
+        app_metadata = user_info.get("app_metadata", {})
+        preapproval_id = app_metadata.get("active_subscription")
+        is_subscriber = False
+        if preapproval_id:
+            from mercadopago_utils import get_mercadopago_preapproval_status
+            preapproval, mp_error, mp_code = await get_mercadopago_preapproval_status(preapproval_id)
+            print(f"Preapproval status: {preapproval}, Error: {mp_error}")
+            if mp_error or preapproval.get("status") != "authorized":
+                # Subscription is not active, update metadata and remove role
+                from auth0_utils import remove_subscriber_role_from_user, add_cancelled_subscription, update_auth0_user_app_metadata
+                await add_cancelled_subscription(user_id, mgmt_token, preapproval_id)
+                await remove_subscriber_role_from_user(user_id, mgmt_token)
+                # Set active_subscription to null for proper Auth0 merge
+                app_metadata["active_subscription"] = None
+                await update_auth0_user_app_metadata(user_id, mgmt_token, app_metadata)
+            else:
+                is_subscriber = True
+        print(f"Is subscriber: {is_subscriber}")
+        auth_claims = { "user_id": user_id, "subscriber": is_subscriber, "mgmt_token": mgmt_token }
+        # Step 3: If authentication is successful, set the cookie for future requests
+        response = Response()
+        cookie_expiry_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24)
+        # Here, we can either store a JWT or a session identifier as the 'auth_token'
+        session_token = self.create_session_token(auth_claims)  # Create a token for session management
+        response.set_cookie("auth_token", value=session_token, expires=cookie_expiry_time, httponly=True, secure=True)
+
+        return auth_claims, response
+
+    def get_user_claims_from_token(self, auth_token):
+        """
+        Decodes the JWT token and returns the user claims.
+
+        :param auth_token: The session token or JWT from the cookie
+        :return: The decoded user claims or raises an error if the token is invalid
+        """
         try:
-            # Read the authentication token from the authorization header and exchange it using the On Behalf Of Flow
-            # The scope is set to the Microsoft Graph API, which may need to be called for more authorization information
-            # https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow
-            auth_token = AuthenticationHelper.get_token_auth_header(headers)
-            # Validate the token before use
-            await self.validate_access_token(auth_token)
+            # Decode the token using the provided secret (assuming JWT is used)
+            decoded_token = jwt.decode(auth_token, self.jwt_secret, algorithms=["HS256"])
+            return decoded_token, Response()  # Return the decoded claims (e.g., user info)
+        except jwt.ExpiredSignatureError:
+            raise AuthError(error="Token has expired", status_code=401)
+        except jwt.InvalidTokenError:
+            raise AuthError(error="Invalid token", status_code=401)
 
-            # Use the on-behalf-of-flow to acquire another token for use with Microsoft Graph
-            # See https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow for more information
-            graph_resource_access_token = self.confidential_client.acquire_token_on_behalf_of(
-                user_assertion=auth_token, scopes=["https://graph.microsoft.com/.default"]
-            )
-            if "error" in graph_resource_access_token:
-                raise AuthError(error=str(graph_resource_access_token), status_code=401)
+    def create_session_token(self, claims):
+        """
+        Creates a JWT session token for the user.
 
-            # Read the claims from the response. The oid and groups claims are used for security filtering
-            # https://learn.microsoft.com/entra/identity-platform/id-token-claims-reference
-            id_token_claims = graph_resource_access_token["id_token_claims"]
-            auth_claims = {"oid": id_token_claims["oid"], "groups": id_token_claims.get("groups", [])}
-
-            # A groups claim may have been omitted either because it was not added in the application manifest for the API application,
-            # or a groups overage claim may have been emitted.
-            # https://learn.microsoft.com/entra/identity-platform/id-token-claims-reference#groups-overage-claim
-            missing_groups_claim = "groups" not in id_token_claims
-            has_group_overage_claim = (
-                missing_groups_claim
-                and "_claim_names" in id_token_claims
-                and "groups" in id_token_claims["_claim_names"]
-            )
-            if missing_groups_claim or has_group_overage_claim:
-                # Read the user's groups from Microsoft Graph
-                auth_claims["groups"] = await AuthenticationHelper.list_groups(graph_resource_access_token)
-            return auth_claims
-        except AuthError as e:
-            logging.exception("Exception getting authorization information - " + json.dumps(e.error))
-            if self.require_access_control and not self.enable_unauthenticated_access:
-                raise
-            return {}
-        except Exception:
-            logging.exception("Exception getting authorization information")
-            if self.require_access_control and not self.enable_unauthenticated_access:
-                raise
-            return {}
+        :param claims: The user claims to be encoded in the token
+        :return: A JWT session token
+        """
+        expiration = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24)  # Token expires in 24 hours
+        print(f"Creating session token with expiration: {expiration} for claims: {claims}")
+        token = jwt.encode(
+            {
+                "user_id": claims.get("user_id"),
+                "subscriber": claims.get("subscriber"),
+                "exp": expiration
+            },
+            self.jwt_secret,
+            algorithm="HS256"
+        )
+        return token
 
     async def check_path_auth(self, path: str, auth_claims: dict[str, Any], search_client: SearchClient) -> bool:
         # Start with the standard security filter for all queries
