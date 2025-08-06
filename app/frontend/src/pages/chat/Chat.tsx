@@ -657,6 +657,9 @@ const Chat = () => {
                         <strong>Tu opinión es importante para nosotros.</strong> Si tenés sugerencias o encontrás errores, por favor, envianos un correo a{" "}
                         <a href="mailto:copiascampodemayo@gmail.com">copiascampodemayo@gmail.com</a>.
                     </p>
+                    <p>
+                        <strong style={{ color: "red" }}>La IA puede cometer errores. Comprueba la información importante.</strong>
+                    </p>
                 </div>
             </Panel>
         </div>

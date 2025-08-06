@@ -65,6 +65,9 @@
     font-weight: 500;
     font-size: 16px;
     line-height: 16px;
+
+    color: var(--white);
+    text-decoration: none;
 }
 
 .nav-bar__tab:last-child {
