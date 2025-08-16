@@ -289,7 +289,9 @@ class AuthenticationHelper:
             user_claims, response = self.get_user_claims_from_token(auth_token)
             # if user_id in user_claims equals x-user-id in headers, then we can return the user_claims
             if "user_id" in user_claims and headers.get("x-user-id") == user_claims["user_id"]:
-                return user_claims, response
+                if user_claims.get("subscriber", False):
+                    print("User is a subscriber, returning claims.")
+                    return user_claims, response
         # Step 3: Get the user_id from the headers
         user_id = headers.get("x-user-id")
         print(f"User ID from headers: {user_id}")
