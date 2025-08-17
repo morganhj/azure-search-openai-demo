@@ -14,6 +14,8 @@ import i18next from "./i18n/config";
 import { AuthenticationGuard } from "./components/authentication-guard";
 import { PageLayout } from "./components/page-layout";
 import { PublicPage } from "./pages/public-page";
+import PrivacyPolicy from "./pages/privacy-policy";
+import TermsOfService from "./pages/terms-of-service";
 
 import MercadoPagoCallback from "./pages/mercadopago-callback";
 
@@ -39,6 +41,14 @@ const router = createHashRouter([
             {
                 path: "mercadopago/callback",
                 element: <AuthenticationGuard component={MercadoPagoCallback} />
+            },
+            {
+                path: "privacy-policy",
+                element: <PrivacyPolicy />
+            },
+            {
+                path: "terms-of-service",
+                element: <TermsOfService />
             },
             {
                 path: "*",

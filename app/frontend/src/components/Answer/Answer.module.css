@@ -28,8 +28,7 @@
 }
 
 .answerText h1,
-h2,
-h2 {
+.answerText h2 {
     text-align: center;
     font-size: 1.625rem;
     font-weight: bold;

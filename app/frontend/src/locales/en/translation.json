@@ -122,6 +122,11 @@
         "shouldStream": "Stream chat completion responses"
     },
 
+    "footer": {
+        "privacyPolicy": "Privacy Policy",
+        "termsOfService": "Terms of Service",
+        "copyright": "© {{year}} Soldado Digital. All rights reserved."
+    },
     "helpTexts": {
         "promptTemplate":
             "Overrides the prompt used to generate the answer based on the question and search results. To append to existing prompt instead of replace whole prompt, start your prompt with '>>>'.",

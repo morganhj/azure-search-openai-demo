@@ -121,6 +121,11 @@
         "shouldStream": "Stream chat completion responses"
     },
 
+    "footer": {
+        "privacyPolicy": "Política de Privacidade",
+        "termsOfService": "Termos de Serviço",
+        "copyright": "© {{year}} Soldado Digital. Todos os direitos reservados."
+    },
     "helpTexts": {
         "promptTemplate":
             "Substitui o prompt usado para gerar a resposta com base na pergunta e nos resultados da pesquisa. Para adicionar ao prompt existente em vez de substituí-lo por completo, comece seu prompt com '>>>'.",

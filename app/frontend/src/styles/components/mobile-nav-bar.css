@@ -1,5 +1,5 @@
 .mobile-nav-bar__container {
-    position: fixed;
+    /* position: fixed; */
     display: none;
 
     justify-content: center;
